@@ -249,10 +249,10 @@ farmingTab:CreateDropdown({
 })
 
 -- Meteor Farm
-local meteorSection = farmingTab:CreateSection("Meteor")
+local meteorSection = farmingTab:CreateSection("Meteorite")
 
 farmingTab:CreateToggle({
-    Name = "Farm Meteor",
+    Name = "Farm Meteors",
     CurrentValue = false,
     Callback = function(val)
         meteorFarmEnabled = val
