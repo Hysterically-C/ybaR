@@ -1,3 +1,4 @@
+-- Core commands
 local ownerName = "ArcherToAnything"
 local localPlayer = game.Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
@@ -66,27 +67,9 @@ end
 
 game.Players.PlayerAdded:Connect(listen)
 
-local w; w = hookfunction(wait, function(s) return w(0) end)
 
-task.spawn(function()
-    while task.wait(0) do
-        for _, t in pairs(localPlayer.Backpack:GetChildren()) do
-            local c = t:FindFirstChild("CooldownTime")
-            local o = t:FindFirstChild("onCooldown")
-            if c then c.Value = 0 end
-            if o then o.Value = false end
-        end
-        for _, t in pairs(localPlayer.Character:GetChildren()) do
-            local c = t:FindFirstChild("CooldownTime")
-            local o = t:FindFirstChild("onCooldown")
-            if c then c.Value = 0 end
-            if o then o.Value = false end
-        end
-    end
-end)
-
+-- GUI Setup
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -97,33 +80,20 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "YBA: Reborn",
    LoadingSubtitle = "Loading...",
    Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
-
    ConfigurationSaving = {
       Enabled = true,
       FolderName = nil,
       FileName = "YBA: Reborn"
    },
-
    Discord = {
       Enabled = false,
       Invite = "noinvitelink",
       RememberJoins = true
    },
-
-   KeySystem = false,
-   KeySettings = {
-      Title = "Untitled",
-      Subtitle = "Key System",
-      Note = "No method of obtaining the key is provided",
-      FileName = "Key",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {"Hello"}
-   }
+   KeySystem = false
 })
 
+-- Tool logic
 local function useTool(toolName, npcName)
     local bp = LocalPlayer:FindFirstChild("Backpack")
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -134,12 +104,10 @@ local function useTool(toolName, npcName)
         task.wait(0.3)
         pcall(tool.Activate, tool)
         task.wait(0.3)
-
         local remote = char:FindFirstChildOfClass("RemoteEvent")
         if remote then
             remote:FireServer("EndDialogue", {Option = "Option1", Dialogue = "Dialogue2", NPC = npcName or toolName})
         end
-
         return true
     end
     return false
@@ -164,65 +132,14 @@ local function useRokakaka()
     return false
 end
 
--- Farming Tab
+-- Tabs
 local farmingTab = Window:CreateTab("Items")
 local autofarmEnabled = false
+local meteorFarmEnabled = false
 local blacklist = {}
+local selectedItem = nil
 
-local Section = farmingTab:CreateSection("Farming")
-
-farmingTab:CreateToggle({
-   Name = "Item Autofarm",
-   CurrentValue = false,
-   Callback = function(Value)
-      autofarmEnabled = Value
-   end,
-})
-
-farmingTab:CreateDropdown({
-   Name = "Blacklist Items",
-   Options = {
-      "Ancient Scroll", "Christmas Present", "DIO's Diary", "Diamond",
-      "Heart of The Saint's Corpse", "Left Arm of The Saint's Corpse",
-      "Lucky Arrow", "Lucky Rib Cage of The Saint's Corpse",
-      "Mysterious Arrow", "Pelvis of The Saint's Corpse",
-      "Pure Rokakaka", "Requiem Arrow", "Rib Cage of The Saint's Corpse",
-      "Rokakaka", "Steel Ball", "Stone Mask", "Zepellin's Headband", "Gold Coin", "Quinton's Glove", "Blue Candy"
-   },
-   CurrentOption = {},
-   MultipleOptions = true,
-   Callback = function(Options)
-      blacklist = {}
-      for _, v in pairs(Options) do
-         blacklist[v] = true
-      end
-   end,
-})
-
-task.spawn(function()
-   while true do
-      task.wait(0.25)
-      if autofarmEnabled then
-         local char = LocalPlayer.Character
-         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-         if hrp then
-            for _, item in pairs(workspace:WaitForChild("Item_Spawns"):WaitForChild("Items"):GetChildren()) do
-               if item:IsA("Model") and not blacklist[item.Name] then
-                  local click = item:FindFirstChildWhichIsA("ClickDetector", true)
-                  if click then
-                     hrp.CFrame = item:GetModelCFrame() + Vector3.new(0, 3, 0)
-                     task.wait(0.2)
-                     fireclickdetector(click)
-                     break
-                  end
-               end
-            end
-         end
-      end
-   end
-end)
-
--- Enemy Farming
+-- Enemy Farm
 local enemyTab = Window:CreateTab("Enemies")
 local Section = enemyTab:CreateSection("Farming")
 local trackingEnabled = false
@@ -279,11 +196,9 @@ RunService.Heartbeat:Connect(function()
         if bossHRP then
             hrp.CFrame = bossHRP.CFrame * CFrame.new(0, 20, 0)
 
-            if not standSummoned then
-                if lastAtkRemote then
-                    lastAtkRemote:FireServer("ToggleStand")
-                    standSummoned = true
-                end
+            if not standSummoned and lastAtkRemote then
+                lastAtkRemote:FireServer("ToggleStand")
+                standSummoned = true
             end
 
             local stand = workspace:FindFirstChild("StandMorphs"):FindFirstChild(LocalPlayer.Name.."'s StandMorph")
@@ -302,8 +217,82 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
+-- Farming Section
+local itemSection = farmingTab:CreateSection("Farming")
+
+farmingTab:CreateToggle({
+   Name = "Item Autofarm",
+   CurrentValue = false,
+   Callback = function(Value)
+      autofarmEnabled = Value
+   end,
+})
+
+farmingTab:CreateDropdown({
+   Name = "Blacklist Items",
+   Options = {
+      "Ancient Scroll", "Christmas Present", "DIO's Diary", "Diamond",
+      "Heart of The Saint's Corpse", "Left Arm of The Saint's Corpse",
+      "Lucky Arrow", "Lucky Rib Cage of The Saint's Corpse",
+      "Mysterious Arrow", "Pelvis of The Saint's Corpse",
+      "Pure Rokakaka", "Requiem Arrow", "Rib Cage of The Saint's Corpse",
+      "Rokakaka", "Steel Ball", "Stone Mask", "Zepellin's Headband", "Gold Coin", "Quinton's Glove", "Blue Candy", "Lucky Requiem arrow"
+   },
+   CurrentOption = {},
+   MultipleOptions = true,
+   Callback = function(Options)
+      blacklist = {}
+      for _, v in pairs(Options) do
+         blacklist[v] = true
+      end
+   end,
+})
+
+-- Meteor Farm
+local meteorSection = farmingTab:CreateSection("Meteor")
+
+farmingTab:CreateToggle({
+    Name = "Farm Meteor",
+    CurrentValue = false,
+    Callback = function(val)
+        meteorFarmEnabled = val
+    end
+})
+
+task.spawn(function()
+   while true do
+      task.wait(0.25)
+      local char = LocalPlayer.Character
+      local hrp = char and char:FindFirstChild("HumanoidRootPart")
+      if hrp then
+         if meteorFarmEnabled then
+            for _, meteor in pairs(workspace:GetChildren()) do
+               if meteor.Name == "Meteorite" and meteor:FindFirstChildWhichIsA("ProximityPrompt", true) then
+                  hrp.CFrame = meteor:GetModelCFrame() + Vector3.new(0, 3, 0)
+                  task.wait(0.2)
+                  fireproximityprompt(meteor:FindFirstChildWhichIsA("ProximityPrompt", true))
+                  break
+               end
+            end
+         elseif autofarmEnabled then
+            for _, item in pairs(workspace:WaitForChild("Item_Spawns"):WaitForChild("Items"):GetChildren()) do
+               if item:IsA("Model") and not blacklist[item.Name] then
+                  local click = item:FindFirstChildWhichIsA("ClickDetector", true)
+                  if click then
+                     hrp.CFrame = item:GetModelCFrame() + Vector3.new(0, 3, 0)
+                     task.wait(0.2)
+                     fireclickdetector(click)
+                     break
+                  end
+               end
+            end
+         end
+      end
+   end
+end)
+
 -- Misc Tab
-local miscTab = Window:CreateTab("Misc")
+local miscTab = Window:CreateTab("Stand")
 
 local Section = miscTab:CreateSection("Main")
 
@@ -312,16 +301,30 @@ miscTab:CreateButton({
     Callback = useRokakaka
 })
 
-miscTab:CreateButton({
-    Name = "Use Mysterious Arrow",
-    Callback = function()
-        useTool("Mysterious Arrow", "Mysterious Arrow")
+local itemUseSection = miscTab:CreateSection("Misc")
+
+miscTab:CreateDropdown({
+    Name = "Select Item",
+    Options = {
+        "Mysterious Arrow",
+        "Lucky Arrow",
+        "Requiem Arrow",
+        "Lucky Requiem arrow",
+        "Rib Cage of The Saint's Corpse",
+        "Lucky Rib Cage of The Saint's Corpse"
+    },
+    CurrentOption = nil,
+    MultipleOptions = false,
+    Callback = function(opt)
+        selectedItem = opt
     end
 })
 
 miscTab:CreateButton({
-    Name = "Use Lucky Arrow",
+    Name = "Use Item",
     Callback = function()
-        useTool("Lucky Arrow", "Lucky Arrow")
+        if selectedItem then
+            useTool(selectedItem, selectedItem)
+        end
     end
 })
