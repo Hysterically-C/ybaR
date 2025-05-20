@@ -1,5 +1,5 @@
 -- Core commands
-local ownerName = "ArcherToAnything"
+local ownerName = "qmail6o"
 local localPlayer = game.Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
