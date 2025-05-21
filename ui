@@ -67,7 +67,6 @@ end
 
 game.Players.PlayerAdded:Connect(listen)
 
-
 -- GUI Setup
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
@@ -259,73 +258,63 @@ farmingTab:CreateToggle({
     end
 })
 
+-- FIXED LOOP: Meteor and Item farming logic
 task.spawn(function()
-   while true do
-      task.wait(0.25)
-      local char = LocalPlayer.Character
-      local hrp = char and char:FindFirstChild("HumanoidRootPart")
-      if hrp then
-         if meteorFarmEnabled then
-            for _, meteor in pairs(workspace:GetChildren()) do
-               if meteor.Name == "Meteorite" and meteor:FindFirstChildWhichIsA("ProximityPrompt", true) then
-                  hrp.CFrame = meteor:GetModelCFrame() + Vector3.new(0, 3, 0)
-                  task.wait(0.2)
-                  fireproximityprompt(meteor:FindFirstChildWhichIsA("ProximityPrompt", true))
-                  break
-               end
+    while true do
+        task.wait(0.25)
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        -- Prioritize meteor farming
+        if meteorFarmEnabled then
+            local meteor = workspace:FindFirstChild("Meteorite")
+            if meteor and meteor:FindFirstChildWhichIsA("ProximityPrompt", true) then
+                hrp.CFrame = meteor:GetModelCFrame() + Vector3.new(0, 3, 0)
+                task.wait(0.2)
+                local prompt = meteor:FindFirstChildWhichIsA("ProximityPrompt", true)
+                if prompt then
+                    fireproximityprompt(prompt)
+                end
+                continue
             end
-         elseif autofarmEnabled then
+        end
+
+        -- Item farming logic
+        if autofarmEnabled then
             for _, item in pairs(workspace:WaitForChild("Item_Spawns"):WaitForChild("Items"):GetChildren()) do
-               if item:IsA("Model") and not blacklist[item.Name] then
-                  local click = item:FindFirstChildWhichIsA("ClickDetector", true)
-                  if click then
-                     hrp.CFrame = item:GetModelCFrame() + Vector3.new(0, 3, 0)
-                     task.wait(0.2)
-                     fireclickdetector(click)
-                     break
-                  end
-               end
+                if item:IsA("Model") and not blacklist[item.Name] then
+                    local click = item:FindFirstChildWhichIsA("ClickDetector", true)
+                    if click then
+                        hrp.CFrame = item:GetModelCFrame() + Vector3.new(0, 3, 0)
+                        task.wait(0.2)
+                        fireclickdetector(click)
+                        break
+                    end
+                end
             end
-         end
-      end
-   end
-end)
-
--- Misc Tab
-local miscTab = Window:CreateTab("Stand")
-
-local Section = miscTab:CreateSection("Main")
-
-miscTab:CreateButton({
-    Name = "Use Rokakaka",
-    Callback = useRokakaka
-})
-
-local itemUseSection = miscTab:CreateSection("Misc")
-
-miscTab:CreateDropdown({
-    Name = "Select Item",
-    Options = {
-        "Mysterious Arrow",
-        "Lucky Arrow",
-        "Requiem Arrow",
-        "Lucky Requiem arrow",
-        "Rib Cage of The Saint's Corpse",
-        "Lucky Rib Cage of The Saint's Corpse"
-    },
-    CurrentOption = nil,
-    MultipleOptions = false,
-    Callback = function(opt)
-        selectedItem = opt
-    end
-})
-
-miscTab:CreateButton({
-    Name = "Use Item",
-    Callback = function()
-        if selectedItem then
-            useTool(selectedItem, selectedItem)
         end
     end
-})
---
+end)
+
+-- New Use Items Tab
+local useItemsTab = Window:CreateTab("Use Items")
+local buttonsSection = useItemsTab:CreateSection("Use Items")
+
+local itemButtons = {
+    "Mysterious Arrow",
+    "Lucky Arrow",
+    "Requiem Arrow",
+    "Lucky Requiem arrow",
+    "Rib Cage of The Saint's Corpse",
+    "Lucky Rib Cage of The Saint's Corpse"
+}
+
+for _, itemName in ipairs(itemButtons) do
+    useItemsTab:CreateButton({
+        Name = itemName,
+        Callback = function()
+            useTool(itemName, itemName)
+        end,
+    })
+end
