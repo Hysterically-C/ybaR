@@ -297,24 +297,4 @@ task.spawn(function()
     end
 end)
 
--- New Use Items Tab
-local useItemsTab = Window:CreateTab("Use Items")
-local buttonsSection = useItemsTab:CreateSection("Use Items")
 
-local itemButtons = {
-    "Mysterious Arrow",
-    "Lucky Arrow",
-    "Requiem Arrow",
-    "Lucky Requiem arrow",
-    "Rib Cage of The Saint's Corpse",
-    "Lucky Rib Cage of The Saint's Corpse"
-}
-
-for _, itemName in ipairs(itemButtons) do
-    useItemsTab:CreateButton({
-        Name = itemName,
-        Callback = function()
-            useTool(itemName, itemName)
-        end,
-    })
-end
